@@ -1,5 +1,7 @@
 import type { ZerithDBConfig } from "zerithdb-core";
 import { DbClient, CollectionClient } from "./db-client.js";
+import type { CloudBackupTarget, LocalCloudBackupOptions } from "./db-client.js";
+import { LocalCloudBackupAdapter } from "./db-client.js";
 import { SyncEngine } from "./sync-engine.js";
 import { AuthManager } from "./auth-manager.js";
 import { NetworkManager } from "./network-manager.js";
@@ -32,6 +34,12 @@ export interface ZerithDBApp {
 
   /** P2P network manager — WebRTC peer connections and signaling */
   network: NetworkManager;
+
+  /**
+   * Create a local cloud backup adapter. The adapter exports configured
+   * IndexedDB collections and uploads the JSON snapshot through the target.
+   */
+  backup(target: CloudBackupTarget, options?: LocalCloudBackupOptions): LocalCloudBackupAdapter;
 
   /** Underlying app configuration */
   config: Readonly<ZerithDBConfig>;
@@ -106,6 +114,10 @@ export function createApp(config: ZerithDBConfig): ZerithDBApp {
     sync,
     auth,
     network,
+
+    backup(target: CloudBackupTarget, options?: LocalCloudBackupOptions): LocalCloudBackupAdapter {
+      return new LocalCloudBackupAdapter(db, target, options);
+    },
 
     async dispose(): Promise<void> {
       await Promise.all([sync.dispose(), network.dispose(), db.dispose()]);

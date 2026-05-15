@@ -106,6 +106,31 @@ const app = createApp({
 });
 ```
 
+### Local Cloud Backups
+
+```typescript
+import { createApp, GoogleDriveBackupTarget } from "zerithdb-sdk";
+
+const app = createApp({ appId: "my-app-unique-id" });
+
+const backup = app.backup(
+  new GoogleDriveBackupTarget({
+    accessToken: await getGoogleDriveAccessToken(),
+    folderId: "drive-folder-id",
+  }),
+  {
+    collections: ["todos", "settings"],
+    intervalMs: 30 * 60 * 1000,
+  }
+);
+
+backup.start();
+```
+
+The backup adapter periodically exports the selected IndexedDB collections as a JSON snapshot and
+uploads it through a cloud target. ZerithDB includes Google Drive and Dropbox targets; applications
+remain responsible for obtaining the provider access token through their own OAuth flow.
+
 ---
 
 ## Architecture in One Diagram
