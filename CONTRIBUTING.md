@@ -62,7 +62,8 @@ pnpm --filter zerithdb-sdk dev
   [`good-first-issue`](https://github.com/Zerith-Labs/ZerithDB/issues?q=label%3Agood-first-issue) or
   [`help-wanted`](https://github.com/Zerith-Labs/ZerithDB/issues?q=label%3Ahelp-wanted).
 - For features, open a Discussion before writing code.
-- Comment `/assign` to automatically claim an issue. Use `/unassign` if you can no longer work on it.
+- Comment `/assign` to automatically claim an issue. Use `/unassign` if you can no longer work on
+  it.
 
 ### 2. Branch Naming
 

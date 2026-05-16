@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --concurrency=20",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
@@ -22,17 +22,25 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build --filter=!./apps/* && changeset publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "benchmark": "tsx scripts/benchmark.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.7",
+    "@playwright/test": "^1.60.0",
     "@types/node": "^22.0.0",
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^20.9.0",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.7",
+    "pouchdb": "^9.0.0",
+    "pouchdb-adapter-indexeddb": "^9.0.0",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
+    "tsx": "^4.21.0",
     "turbo": "^2.3.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

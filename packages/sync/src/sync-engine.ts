@@ -21,6 +21,9 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
   private readonly persistences = new Map<string, IndexeddbPersistence>();
   private _enabled = false;
   private _state: SyncState = { synced: false, pendingUpdates: 0, connectedPeers: 0 };
+  private pendingUpdates = new Map<string, Uint8Array[]>();
+  private syncTimer: any = null;
+  private syncTimerIsRaf: boolean = false;
 
   constructor(
     private readonly config: ZerithDBConfig,
@@ -29,7 +32,34 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
   ) {
     super();
     this.onPeerUpdate = this.onPeerUpdate.bind(this);
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", this.handleVisibilityChange);
+    }
   }
+
+  private handleVisibilityChange = (): void => {
+    if (document.visibilityState === "visible") {
+      // Resume sync: Flush any local updates that accumulated while hidden.
+      // We don't need to 'enable()' because we never tore down incoming listeners.
+      if (this.pendingUpdates.size > 0 && !this.syncTimer) {
+        this.flushUpdates();
+      }
+    } else if (document.visibilityState === "hidden") {
+      // Pause outgoing sync: Clear the timer so it doesn't wake the CPU/radio.
+      // (requestAnimationFrame automatically pauses natively, but clearing it explicitly
+      // ensures the setTimeout fallback is safely neutralized).
+      if (this.syncTimer) {
+        if (this.syncTimerIsRaf && typeof window !== "undefined" && window.cancelAnimationFrame) {
+          window.cancelAnimationFrame(this.syncTimer);
+        } else {
+          clearTimeout(this.syncTimer);
+        }
+        this.syncTimer = null;
+        this.syncTimerIsRaf = false;
+      }
+    }
+  };
 
   /**
    * Enable P2P sync. After calling this, local changes are broadcast
@@ -73,16 +103,12 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
     );
     this.persistences.set(collectionName, persistence);
 
-    // Broadcast local updates to peers
+    // Broadcast local updates to peers (batched via requestAnimationFrame)
     doc.on("update", (update: Uint8Array, origin: unknown) => {
       if (origin === "remote") return; // Don't echo back remote updates
       if (!this._enabled) return;
 
-      this.emit("update:local", { collectionName, update });
-      this.network.broadcast({
-        type: "sync-update",
-        payload: this.encodeMessage(collectionName, update),
-      });
+      this.queueUpdate(collectionName, update);
     });
 
     this.docs.set(collectionName, doc);
@@ -100,7 +126,19 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
   }
 
   async dispose(): Promise<void> {
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+    }
     this.disable();
+    if (this.syncTimer) {
+      if (this.syncTimerIsRaf && typeof window !== "undefined" && window.cancelAnimationFrame) {
+        window.cancelAnimationFrame(this.syncTimer);
+      } else {
+        clearTimeout(this.syncTimer);
+      }
+      this.syncTimer = null;
+      this.syncTimerIsRaf = false;
+    }
     for (const [, persistence] of this.persistences) {
       await persistence.destroy();
     }
@@ -109,9 +147,48 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
     }
     this.docs.clear();
     this.persistences.clear();
+    this.pendingUpdates.clear();
   }
 
   // ─── Private ──────────────────────────────────────────────────────────────
+
+  private queueUpdate(collectionName: string, update: Uint8Array): void {
+    let updates = this.pendingUpdates.get(collectionName);
+    if (!updates) {
+      updates = [];
+      this.pendingUpdates.set(collectionName, updates);
+    }
+    updates.push(update);
+
+    // Only schedule the next outgoing flush if the tab is visible.
+    // If hidden, the updates safely accumulate in the map without battery drain.
+    if (
+      !this.syncTimer &&
+      (typeof document === "undefined" || document.visibilityState !== "hidden")
+    ) {
+      if (typeof window !== "undefined" && window.requestAnimationFrame) {
+        this.syncTimer = window.requestAnimationFrame(() => this.flushUpdates());
+        this.syncTimerIsRaf = true;
+      } else {
+        this.syncTimer = setTimeout(() => this.flushUpdates(), 50);
+        this.syncTimerIsRaf = false;
+      }
+    }
+  }
+
+  private flushUpdates(): void {
+    this.syncTimer = null;
+    for (const [collectionName, updates] of this.pendingUpdates.entries()) {
+      // Y.mergeUpdates merges all updates into a single efficient payload
+      const merged = Y.mergeUpdates(updates);
+      this.emit("update:local", { collectionName, update: merged });
+      this.network.broadcast({
+        type: "sync-update",
+        payload: this.encodeMessage(collectionName, merged),
+      });
+    }
+    this.pendingUpdates.clear();
+  }
 
   private onPeerUpdate(msg: { type: string; payload: Uint8Array | string; from: string }): void {
     if (msg.type !== "sync-update") return;

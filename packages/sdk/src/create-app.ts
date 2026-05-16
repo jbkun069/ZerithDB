@@ -1,4 +1,6 @@
+import { Logger } from "zerithdb-core";
 import type { ZerithDBConfig } from "zerithdb-core";
+import { ZerithDBError, ErrorCode } from "zerithdb-core";
 import { DbClient, CollectionClient } from "./db-client.js";
 import { SyncEngine } from "./sync-engine.js";
 import { AuthManager } from "./auth-manager.js";
@@ -66,12 +68,19 @@ export interface ZerithDBApp {
  * ```
  */
 export function createApp(config: ZerithDBConfig): ZerithDBApp {
+  if (!config.appId || config.appId.trim().length === 0) {
+    throw new ZerithDBError(
+      ErrorCode.SDK_INVALID_CONFIG,
+      'createApp requires a non-empty "appId" in config'
+    );
+  }
   const resolvedConfig: ZerithDBConfig = {
     logLevel: "warn",
     ...config,
     sync: {
       signalingUrl: "wss://signal.zerithdb.dev",
       maxPeers: 10,
+      transport: "auto",
       ...config.sync,
     },
     auth: {
@@ -84,6 +93,9 @@ export function createApp(config: ZerithDBConfig): ZerithDBApp {
       ...config.network,
     },
   };
+
+  const logger = new Logger(resolvedConfig, "SDK");
+  logger.info("Initializing ZerithDB app", { appId: resolvedConfig.appId });
 
   const auth = new AuthManager(resolvedConfig);
   const db = new DbClient(resolvedConfig);

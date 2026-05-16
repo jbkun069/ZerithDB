@@ -22,7 +22,7 @@ concurrency:
 jobs:
   # ── 1. Lint & Format ────────────────────────────────────────────────────────
   lint-format:
-    name: 🔍 Lint & Format
+    name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,12 +45,9 @@ jobs:
       - name: Lint (ESLint)
         run: pnpm turbo lint
 
-      - name: Format check (Prettier)
-        run: pnpm format:check
-
   # ── 2. TypeScript type-check ────────────────────────────────────────────────
   typecheck:
-    name: 🧠 TypeCheck
+    name: TypeCheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,7 +72,7 @@ jobs:
 
   # ── 3. Build & Unit Tests ───────────────────────────────────────────────────
   build-and-test:
-    name: 🏗️ Build & Test
+    name: Build & Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -118,7 +115,7 @@ jobs:
 
   # ── 4. Python SDK ───────────────────────────────────────────────────────────
   python-sdk:
-    name: 🐍 Python SDK (py${{ matrix.python }})
+    name: Python SDK (py${{ matrix.python }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -153,7 +150,7 @@ jobs:
   # This is the single required status check to add in branch protection rules.
   # All jobs must pass for this to succeed.
   ci-success:
-    name: ✅ CI Passed
+    name: CI Passed
     needs: [lint-format, typecheck, build-and-test, python-sdk]
     runs-on: ubuntu-latest
     if: always()

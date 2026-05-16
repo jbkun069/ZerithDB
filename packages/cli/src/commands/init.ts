@@ -4,7 +4,7 @@ import ora from "ora";
 import chalk from "chalk";
 import { execa } from "execa";
 import prompts from "prompts";
-
+import { writeFile } from "../utils/writeFile";
 const TEMPLATES: Record<string, string> = {
   todo: "todo-app",
   chat: "chat-app",
@@ -50,6 +50,7 @@ export async function initCommand(
       initial: "my-zerithdb-app",
       validate: (v: string) => getAppNameValidationError(v) ?? true,
     });
+
     appName = response.appName as string;
   }
 
@@ -60,6 +61,7 @@ export async function initCommand(
 
   // ── Step 2: Template selection ────────────────────────────────────────────
   let template = options.template;
+
   if (!(template in TEMPLATES)) {
     const response = await prompts({
       type: "select",
@@ -72,32 +74,41 @@ export async function initCommand(
         { title: "📦  Blank", value: "blank" },
       ],
     });
+
     template = response.template as string;
   }
 
   const targetDir = path.resolve(process.cwd(), appName);
 
   // ── Step 3: Scaffold ───────────────────────────────────────────────────────
-  const spinner = ora(`Creating ${chalk.cyan(appName)}...`).start();
+  const spinner = ora().start();
 
   try {
+    spinner.text = `Creating project directory for ${chalk.cyan(appName)}...`;
     await fs.mkdir(targetDir, { recursive: true });
+
+    spinner.text = "Generating starter application files...";
     await scaffoldTemplate(targetDir, appName, template);
-    spinner.succeed(`Created ${chalk.cyan(appName)}`);
+
+    spinner.text = "Configuring ZerithDB starter setup...";
+
+    spinner.succeed(`Created ${chalk.cyan(appName)} successfully`);
   } catch (err) {
-    spinner.fail("Scaffold failed");
+    spinner.fail("Project scaffolding failed");
     console.error(err);
     process.exit(1);
   }
 
   // ── Step 4: Install ────────────────────────────────────────────────────────
   if (options.install) {
-    const installSpinner = ora("Installing dependencies...").start();
+    const installSpinner = ora("Installing project dependencies...").start();
+
     try {
       await execa("npm", ["install"], { cwd: targetDir });
-      installSpinner.succeed("Dependencies installed");
+
+      installSpinner.succeed("Dependencies installed successfully");
     } catch {
-      installSpinner.warn("Failed to install dependencies. Run `npm install` manually.");
+      installSpinner.warn("Dependency installation failed. Please run `npm install` manually.");
     }
   }
 
@@ -105,9 +116,20 @@ export async function initCommand(
   console.log(`
 ${chalk.green("✔")} ${chalk.bold("Your ZerithDB app is ready!")}
 
-  ${chalk.gray("Next steps:")}
+${chalk.gray("Project:")} ${chalk.cyan(appName)}
+${chalk.gray("Template:")} ${chalk.cyan(TEMPLATES[template] ?? template)}
+
+${chalk.gray("Next steps:")}
   ${chalk.cyan(`cd ${appName}`)}
   ${chalk.cyan("npm run dev")}
+
+${chalk.gray("Local development:")}
+  ${chalk.cyan("http://localhost:3000")}
+
+${chalk.gray("Available commands:")}
+  ${chalk.cyan("npm run dev")}    Start development server
+  ${chalk.cyan("npm run build")}  Create production build
+  ${chalk.cyan("npm run start")}  Start production server
 
 ${chalk.gray("Docs:")} https://zerithdb.dev/docs
 ${chalk.gray("Discord:")} https://discord.gg/MhvuDvzWfF
@@ -142,20 +164,17 @@ async function scaffoldTemplate(
     },
   };
 
-  await fs.writeFile(path.join(targetDir, "package.json"), JSON.stringify(pkg, null, 2));
-
-  // Write minimal app entry
-  const appDir = path.join(targetDir, "src", "app");
-  await fs.mkdir(appDir, { recursive: true });
+  await writeFile(targetDir, "package.json", JSON.stringify(pkg, null, 2));
 
   const indexContent = template === "todo" ? todoTemplate(appName) : blankTemplate(appName);
+
   const layoutContent = layoutTemplate();
 
-  await fs.writeFile(path.join(appDir, "page.tsx"), indexContent);
-  await fs.writeFile(path.join(appDir, "layout.tsx"), layoutContent);
+  await writeFile(targetDir, "src/app/page.tsx", indexContent);
+  await writeFile(targetDir, "src/app/layout.tsx", layoutContent);
 
   // .gitignore
-  await fs.writeFile(path.join(targetDir, ".gitignore"), "node_modules\n.next\ndist\n.env\n");
+  await writeFile(targetDir, ".gitignore", "node_modules\n.next\ndist\n.env\n");
 }
 
 function layoutTemplate(): string {
