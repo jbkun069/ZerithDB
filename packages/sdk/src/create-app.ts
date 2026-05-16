@@ -77,13 +77,30 @@ export interface ZerithDBApp {
  * app.sync.enable();
  * ```
  */
+
+function isIndexedDBAvailable(): boolean {
+  try {
+    return typeof indexedDB !== "undefined";
+  } catch {
+    return false;
+  }
+}
+
 export function createApp(config: ZerithDBConfig): ZerithDBApp {
+  if (!isIndexedDBAvailable()) {
+    throw new ZerithDBError(
+      ErrorCode.SDK_UNSUPPORTED_ENVIRONMENT,
+      "IndexedDB is unavailable in this browser environment. ZerithDB requires IndexedDB support. Try disabling private/incognito restrictions or use a supported browser."
+    );
+  }
+
   if (!config.appId || config.appId.trim().length === 0) {
     throw new ZerithDBError(
       ErrorCode.SDK_INVALID_CONFIG,
       'createApp requires a non-empty "appId" in config'
     );
   }
+
   const resolvedConfig: ZerithDBConfig = {
     logLevel: "warn",
     ...config,

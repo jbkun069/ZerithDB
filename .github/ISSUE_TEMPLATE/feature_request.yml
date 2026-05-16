@@ -1,16 +1,16 @@
-name: 🚀 Feature Request
+name: "🚀 Feature Request"
 description: Suggest a new feature or enhancement for ZerithDB
 title: "[Feature]: "
 labels: ["enhancement", "needs-discussion"]
 assignees: []
- 
+
 body:
   - type: markdown
     attributes:
       value: |
         Have an idea that would make ZerithDB better? We'd love to hear it!
         Please fill out the sections below to help us understand your proposal clearly.
- 
+
   - type: textarea
     id: problem-statement
     attributes:
@@ -23,7 +23,7 @@ body:
         Currently there is no way to... which means I have to...
     validations:
       required: true
- 
+
   - type: textarea
     id: proposed-solution
     attributes:
@@ -39,12 +39,14 @@ body:
     id: use-cases
     attributes:
       label: 🎯 Use Cases
-      description: How would a developer use this feature?
+      description: |
+        Describe a real-world scenario where this feature would be useful.
+        Explain who benefits from it and how it improves their workflow.
       placeholder: |
-        Use case 1: ...
-        Use case 2: ...
+        As a developer, I want to...
+        This would help because...
     validations:
-      required: false
+      required: true
 
   - type: textarea
     id: api-design
@@ -57,7 +59,7 @@ body:
         ```
     validations:
       required: false
- 
+
   - type: textarea
     id: alternatives-considered
     attributes:
@@ -70,7 +72,7 @@ body:
         Another approach could be... but the downside is...
     validations:
       required: true
- 
+
   - type: dropdown
     id: priority
     attributes:
@@ -83,7 +85,7 @@ body:
         - "🟢 Low — minor convenience / nice to have"
     validations:
       required: true
- 
+
   - type: dropdown
     id: contribution
     attributes:
@@ -95,7 +97,7 @@ body:
         - "No — I'm just suggesting the idea"
     validations:
       required: true
- 
+
   - type: textarea
     id: additional-context
     attributes:
@@ -104,7 +106,7 @@ body:
       placeholder: Links, screenshots, diagrams, related issues...
     validations:
       required: false
- 
+
   - type: checkboxes
     id: checklist
     attributes:

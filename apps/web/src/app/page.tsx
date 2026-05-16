@@ -15,10 +15,36 @@ import {
   FileCode,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import CodeWalkthrough from "@/components/CodeWalkthrough";
-import TerminalShowcase from "@/components/TerminalShowcase";
-import AnimatedDiagram from "@/components/AnimatedDiagram";
 import dynamic from "next/dynamic";
+import Image from "next/image";
+
+const CodeWalkthrough = dynamic(
+  () => import("@/components/CodeWalkthrough"),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse rounded-xl bg-gray-100" />
+    ),
+  }
+);
+
+const TerminalShowcase = dynamic(
+  () => import("@/components/TerminalShowcase"),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse rounded-xl bg-gray-100" />
+    ),
+  }
+);
+
+const AnimatedDiagram = dynamic(
+  () => import("@/components/AnimatedDiagram"),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse rounded-xl bg-gray-100" />
+    ),
+  }
+);
+
 import FrameworkSection from "@/components/FrameworkSection";
 
 const HomePlayground = dynamic(() => import("@/components/HomePlayground"), {
@@ -59,7 +85,13 @@ export default function LandingPage() {
               animate={{ rotate: 0, scale: 1 }}
               className="w-10 h-10 flex items-center justify-center overflow-hidden"
             >
-              <img src="/logo.svg" alt="ZerithDB Logo" className="w-full h-full" />
+              <Image
+                src="/logo.svg"
+                alt="ZerithDB Logo"
+                width={40}
+                height={40}
+                className="w-full h-full"
+              />
             </motion.div>
             <span className="font-semibold text-xl tracking-tight">ZerithDB</span>
           </div>
@@ -500,13 +532,13 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="overflow-x-auto rounded-2xl border border-border shadow-sm transition-colors duration-300 dark:bg-card"
-            >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="overflow-x-auto rounded-2xl border border-border shadow-sm transition-colors duration-300 dark:bg-card"
+          >
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-muted text-foreground border-b border-border">

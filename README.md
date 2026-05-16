@@ -36,6 +36,22 @@ your users' browsers form a resilient, encrypted mesh network.
 
 ---
 
+## Why ZerithDB?
+
+Traditional backend infrastructure is complex, expensive, and centralized. ZerithDB offers a
+different path:
+
+- **Infinite Scalability:** Your infrastructure scales with your users. Each new user adds computing
+  and storage power to the network.
+- **Zero Latency:** Data is read and written to a local database (IndexedDB) instantly. Sync happens
+  in the background.
+- **Privacy by Design:** Data is encrypted end-to-end. Since there's no central server, there's no
+  single point of failure or data breach.
+- **Development Speed:** Go from `npx zerithdb init` to a live, syncing app in minutes. Focus on
+  your UI, not your API.
+
+---
+
 ## The 30-Second Demo
 
 ```typescript

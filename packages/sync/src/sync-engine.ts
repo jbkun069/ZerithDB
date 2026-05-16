@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
-import type { ZerithDBConfig, SyncState } from "zerithdb-core";
+import type { ZerithDBConfig, SyncState, SyncPlugin } from "zerithdb-core";
 import { EventEmitter } from "zerithdb-core";
 import type { DbClient } from "zerithdb-db";
 import type { NetworkManager } from "zerithdb-network";
@@ -25,6 +25,8 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
   readonly inbox: InboxQueue<Uint8Array>;
   private _enabled = false;
   private _state: SyncState = { synced: false, pendingUpdates: 0, connectedPeers: 0 };
+  private plugins = new Map<string, SyncPlugin>();
+  private activePluginVersion = 1;
   private pendingUpdates = new Map<string, Uint8Array[]>();
   private syncTimer: any = null;
   private syncTimerIsRaf: boolean = false;
@@ -97,6 +99,39 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
     this.updateState({ synced: false, connectedPeers: 0 });
   }
 
+  /**
+   * Register a synchronization plugin directly.
+   */
+  registerPlugin(plugin: SyncPlugin): void {
+    this.plugins.set(plugin.id, plugin);
+    if (plugin.version > this.activePluginVersion) {
+      this.activePluginVersion = plugin.version;
+    }
+  }
+
+  /**
+   * Dynamically load and register a plugin from a URL.
+   */
+  async loadPlugin(pluginUrl: string): Promise<void> {
+    try {
+      const module = await import(pluginUrl);
+      const plugin = module.default as SyncPlugin;
+      this.registerPlugin(plugin);
+    } catch (err) {
+      console.error(`Failed to load plugin from ${pluginUrl}`, err);
+    }
+  }
+
+  /**
+   * Propose a protocol upgrade to all connected peers.
+   */
+  proposeUpgrade(pluginUrl: string, version: number): void {
+    this.network.broadcast({
+      type: "sync-upgrade-offer",
+      payload: JSON.stringify({ pluginUrl, version }),
+    });
+  }
+
   /** Current sync state snapshot */
   get state(): Readonly<SyncState> {
     return this._state;
@@ -136,8 +171,20 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
    * Apply a remote CRDT update to the local document.
    * Called by the network layer when a peer sends an update.
    */
-  applyRemoteUpdate(collectionName: string, update: Uint8Array, fromPeer: string): void {
-    void this.handleRemoteUpdate(collectionName, update, fromPeer);
+  async applyRemoteUpdate(
+    collectionName: string,
+    update: Uint8Array,
+    fromPeer: string
+  ): Promise<void> {
+    let finalUpdate: Uint8Array | null = update;
+    for (const plugin of this.plugins.values()) {
+      if (plugin.onBeforeApplyUpdate) {
+        finalUpdate = await plugin.onBeforeApplyUpdate(collectionName, finalUpdate, fromPeer);
+        if (!finalUpdate) return; // Drop update
+      }
+    }
+
+    void this.handleRemoteUpdate(collectionName, finalUpdate, fromPeer);
   }
 
   async dispose(): Promise<void> {
@@ -202,6 +249,35 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
   }
 
   private onPeerUpdate(msg: { type: string; payload: Uint8Array | string; from: string }): void {
+    if (msg.type === "sync-upgrade-offer") {
+      const payloadStr =
+        typeof msg.payload === "string" ? msg.payload : new TextDecoder().decode(msg.payload);
+      const offer = JSON.parse(payloadStr) as { pluginUrl: string; version: number };
+
+      // Auto-accept and load for this MVP.
+      this.loadPlugin(offer.pluginUrl)
+        .then(() => {
+          this.network.sendTo(msg.from, {
+            type: "sync-upgrade-accept",
+            payload: JSON.stringify({ version: offer.version }),
+          });
+        })
+        .catch(() => {
+          // Failure to upgrade -> disconnect peer
+          // Assuming `network` has a way to disconnect or we just ignore.
+          // We can emit an error or handle it.
+          console.warn(
+            `Peer ${msg.from} failed to upgrade. Disconnecting is currently not natively supported in NetworkManager's public API directly from SyncEngine, but we will ignore their updates.`
+          );
+        });
+      return;
+    }
+
+    if (msg.type === "sync-upgrade-accept") {
+      // Could log or update peer state
+      return;
+    }
+
     if (msg.type !== "sync-update") return;
 
     const payload = typeof msg.payload === "string" ? base64ToBytes(msg.payload) : msg.payload;
@@ -209,7 +285,7 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
     const decoded = this.decodeMessage(payload);
     if (decoded === null) return;
 
-    this.applyRemoteUpdate(decoded.collectionName, decoded.update, msg.from);
+    void this.applyRemoteUpdate(decoded.collectionName, decoded.update, msg.from);
   }
 
   private onPeerConnected(): void {
@@ -223,20 +299,28 @@ export class SyncEngine extends EventEmitter<SyncEvents> {
 
   private async handleLocalUpdate(collectionName: string, update: Uint8Array): Promise<void> {
     try {
+      let finalUpdate: Uint8Array | null = update;
+      for (const plugin of this.plugins.values()) {
+        if (plugin.onBeforeSendUpdate) {
+          finalUpdate = await plugin.onBeforeSendUpdate(collectionName, finalUpdate);
+          if (!finalUpdate) return; // Drop update
+        }
+      }
+
       const mutation = await this.outbox.enqueue({
         type: "sync-update",
         collection: collectionName,
-        payload: update,
+        payload: finalUpdate,
       });
 
       if (!this._enabled) return;
 
-      this.emit("update:local", { collectionName, update });
+      this.emit("update:local", { collectionName, update: finalUpdate });
       if (this.network.connectedPeerCount === 0) return;
 
       this.network.broadcast({
         type: "sync-update",
-        payload: this.encodeMessage(collectionName, update),
+        payload: this.encodeMessage(collectionName, finalUpdate),
       });
 
       await this.outbox.acknowledge(mutation.id);
