@@ -344,7 +344,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -492,6 +492,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm"
+            tabIndex={0}
           >
             <table className="w-full text-left border-collapse">
               <thead>
@@ -697,7 +698,7 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-gray-600">
             © {new Date().getFullYear()} ZerithDB. Open Source.
           </div>
         </div>

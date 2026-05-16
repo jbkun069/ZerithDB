@@ -75,7 +75,7 @@ export default function PlaygroundPage() {
           >
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
-          <div className="h-4 w-px bg-gray-300"></div>
+          <div className="h-4 w-px bg-gray-300"></div> 
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center">
               <img src="/logo.svg" alt="ZerithDB Logo" className="w-full h-full" />
@@ -114,14 +114,14 @@ export default function PlaygroundPage() {
               <Laptop className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-semibold tracking-wide">Browser A (Alice)</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+            <div className="flex items-center gap-2 text-xs text-gray-600 font-mono">
               <Database className="w-3.5 h-3.5" /> IndexedDB Active
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50" tabIndex={0}>
             {clientA.length === 0 ? (
-              <div className="text-center text-gray-400 mt-20 text-sm">
+              <div className="text-center text-gray-600 mt-20 text-sm">
                 No documents. Type below to create one.
               </div>
             ) : (
@@ -132,7 +132,7 @@ export default function PlaygroundPage() {
                     className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-300"
                   >
                     <p className="text-gray-800">{note.text}</p>
-                    <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider font-mono">
+                    <p className="text-[10px] text-gray-600 mt-2 uppercase tracking-wider font-mono">
                       ID: {note.id} • {new Date(note.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -173,14 +173,14 @@ export default function PlaygroundPage() {
               <Laptop className="w-4 h-4 text-purple-400" />
               <span className="text-sm font-semibold tracking-wide">Browser B (Bob)</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+            <div className="flex items-center gap-2 text-xs text-gray-600 font-mono">
               <Database className="w-3.5 h-3.5" /> IndexedDB Active
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50" tabIndex={0}>
             {clientB.length === 0 ? (
-              <div className="text-center text-gray-400 mt-20 text-sm">
+              <div className="text-center text-gray-600 mt-20 text-sm">
                 No documents. Type below to create one.
               </div>
             ) : (
@@ -191,7 +191,7 @@ export default function PlaygroundPage() {
                     className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-2 duration-300"
                   >
                     <p className="text-gray-800">{note.text}</p>
-                    <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wider font-mono">
+                    <p className="text-[10px] text-gray-600 mt-2 uppercase tracking-wider font-mono">
                       ID: {note.id} • {new Date(note.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -241,7 +241,7 @@ export default function PlaygroundPage() {
             3. Create different notes in Browser A and Browser B. Notice they don&apos;t sync.
           </li>
           <li>
-            4. Click <strong className="text-green-600">Network: Offline</strong> to reconnect.
+            4. Click <strong className="text-green-800">Network: Offline</strong> to reconnect.
             Watch the CRDT engine automatically merge the states perfectly!
           </li>
         </ul>
