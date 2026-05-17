@@ -8,7 +8,9 @@ export async function maintenanceCommand(status: string): Promise<void> {
 
   if (status === "on") {
     fs.writeFileSync(maintenanceFile, "1");
-    console.log(chalk.yellow("🚧 Maintenance mode enabled. Signaling server will reject new peers."));
+    console.log(
+      chalk.yellow("🚧 Maintenance mode enabled. Signaling server will reject new peers.")
+    );
   } else if (status === "off") {
     if (fs.existsSync(maintenanceFile)) {
       fs.unlinkSync(maintenanceFile);

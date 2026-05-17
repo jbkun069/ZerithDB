@@ -1,14 +1,17 @@
 # ZerithDB Signaling Exchange Process
 
-This document explains how the signaling mechanism works in ZerithDB and how peers establish a WebRTC connection.
+This document explains how the signaling mechanism works in ZerithDB and how peers establish a
+WebRTC connection.
 
-The implementation described here is based on the signaling flow inside `zerithdb-network`, mainly in `NetworkManager`.
+The implementation described here is based on the signaling flow inside `zerithdb-network`, mainly
+in `NetworkManager`.
 
 ---
 
 ## Overview
 
-ZerithDB uses **WebRTC** for peer-to-peer communication. Since browsers cannot directly discover each other, a **WebSocket signaling server** is used during the initial connection phase.
+ZerithDB uses **WebRTC** for peer-to-peer communication. Since browsers cannot directly discover
+each other, a **WebSocket signaling server** is used during the initial connection phase.
 
 The signaling server is responsible for:
 
@@ -16,7 +19,8 @@ The signaling server is responsible for:
 - Exchanging WebRTC offers and answers
 - Relaying ICE candidates
 
-After the connection is established, synchronization happens directly between peers over WebRTC data channels. The signaling server is no longer involved in data transfer.
+After the connection is established, synchronization happens directly between peers over WebRTC data
+channels. The signaling server is no longer involved in data transfer.
 
 ---
 
@@ -63,7 +67,8 @@ Example:
 wss://signal-server-url?room=my-room&peer=peer-id
 ```
 
-At this stage, the connection is only used for signaling and peer discovery. Application data is not sent through the signaling server.
+At this stage, the connection is only used for signaling and peer discovery. Application data is not
+sent through the signaling server.
 
 ---
 
@@ -84,6 +89,7 @@ this.createPeer(peerId, true);
 ```
 
 The `true` value marks the peer as the **initiator**, meaning it starts the WebRTC handshake.
+
 ---
 
 ## 3. Offer and Answer Exchange
@@ -133,7 +139,8 @@ The received offer is applied using:
 peer.signal(offerPayload);
 ```
 
-After this, `simple-peer` automatically generates an SDP answer and sends it back through the signaling server.
+After this, `simple-peer` automatically generates an SDP answer and sends it back through the
+signaling server.
 
 The answer is handled using:
 
@@ -142,13 +149,15 @@ case "answer":
 ```
 
 and applied to complete the connection setup.
+
 ---
 
 ## 4. ICE Candidate Exchange
 
 After the offer and answer are exchanged, peers start sharing **ICE candidates**.
 
-ICE candidates help peers find a working network path, especially when devices are on different networks or behind NATs.
+ICE candidates help peers find a working network path, especially when devices are on different
+networks or behind NATs.
 
 ZerithDB enables trickle ICE:
 
@@ -156,7 +165,8 @@ ZerithDB enables trickle ICE:
 trickle: true
 ```
 
-This allows candidates to be exchanged gradually instead of waiting for all candidates to be collected.
+This allows candidates to be exchanged gradually instead of waiting for all candidates to be
+collected.
 
 Incoming ICE candidates are handled through:
 
@@ -183,7 +193,8 @@ For NAT traversal, ZerithDB uses public STUN servers:
 
 ## 5. Establishing the Peer Connection
 
-Once the offer/answer exchange and ICE negotiation are complete, a direct WebRTC connection is established.
+Once the offer/answer exchange and ICE negotiation are complete, a direct WebRTC connection is
+established.
 
 This is handled through:
 
@@ -228,4 +239,5 @@ The signaling server is responsible only for:
 - Offer and answer exchange
 - ICE candidate relay
 
-Once peers are connected, all synchronization occurs directly through WebRTC data channels, ensuring a decentralized and privacy-first architecture.
+Once peers are connected, all synchronization occurs directly through WebRTC data channels, ensuring
+a decentralized and privacy-first architecture.

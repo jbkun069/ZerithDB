@@ -41,6 +41,7 @@
     "zerithdb-auth": "workspace:*",
     "zerithdb-core": "workspace:*",
     "zerithdb-db": "workspace:*",
+    "zerithdb-devtools": "workspace:*",
     "zerithdb-network": "workspace:*",
     "zerithdb-sync": "workspace:*"
   },

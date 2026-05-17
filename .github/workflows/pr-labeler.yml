@@ -31,6 +31,7 @@ jobs:
             const labelsToAdd = new Set();
             labelsToAdd.add('gssoc-26'); // Default label for this repo
             labelsToAdd.add('status: needs-review'); // Mark as needing review
+            labelsToAdd.add('mentor:arpittkhandelwal');
             
             // 1. Inherit labels from linked issues
             if (linkedIssueIds.size > 0) {

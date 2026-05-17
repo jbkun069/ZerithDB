@@ -43,6 +43,15 @@ export interface AuthConfig {
   storageKey?: string;
 }
 
+export interface DebugConfig {
+  /**
+   * Enable the DevTools memory collector — samples IndexedDB and WebRTC
+   * buffer usage and broadcasts snapshots for the ZerithDB DevTools extension.
+   * @default false
+   */
+  devtools?: boolean;
+}
+
 export interface NetworkConfig {
   /**
    * Whether to automatically reconnect when a peer disconnects.
@@ -68,6 +77,7 @@ export interface ZerithDBConfig {
   sync?: SyncConfig;
   auth?: AuthConfig;
   network?: NetworkConfig;
+  debug?: DebugConfig;
 
   /**
    * Log level for internal ZerithDB diagnostics.

@@ -2,6 +2,7 @@ import * as ed from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha2.js";
 import type { ZerithDBConfig, Identity, Signature } from "zerithdb-core";
 import { ZerithDBError, ErrorCode, EventEmitter } from "zerithdb-core";
+import { timingSafeEqual } from "./timing-safe.js";
 
 // noble/ed25519 requires a sha512 implementation
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
@@ -100,6 +101,21 @@ export class AuthManager extends EventEmitter<AuthEvents> {
     }
   }
 
+  /**
+   * Securely compares two authentication token challenges in constant time.
+   * Mitigates potential timing attacks against the P2P cluster syncing auth protocols.
+   * Highly critical for distributed network synchronization.
+   */
+  verifyPeerChallenge(expected: string, received: string): boolean {
+    try {
+      const expectedBytes = hexToBytes(expected);
+      const receivedBytes = hexToBytes(received);
+      return timingSafeEqual(expectedBytes, receivedBytes);
+    } catch {
+      return false;
+    }
+  }
+
   /** The currently loaded identity, or null if not signed in */
   get identity(): Identity | null {
     return this._identity;
@@ -177,6 +193,12 @@ function bytesToHex(bytes: Uint8Array): string {
 }
 
 function hexToBytes(hex: string): Uint8Array {
+  if (typeof hex !== "string" || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
+    throw new ZerithDBError(
+      ErrorCode.AUTH_VERIFY_FAILED,
+      `hexToBytes() received an invalid hex string: "${hex}".`
+    );
+  }
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);

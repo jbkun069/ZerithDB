@@ -11,10 +11,10 @@ npm install @zerithdb/astro
 ## Usage
 
 ```js
-import { defineConfig } from 'astro/config';
-import zerithdb from '@zerithdb/astro';
+import { defineConfig } from "astro/config";
+import zerithdb from "@zerithdb/astro";
 
 export default defineConfig({
-  integrations: [zerithdb()]
+  integrations: [zerithdb()],
 });
 ```
