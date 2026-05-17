@@ -51,50 +51,50 @@ jobs:
 
           prompt = f"""You are a senior software engineer performing a code review for ZerithDB — an open-source TypeScript monorepo that implements a distributed, in-browser database using WebRTC P2P networking, CRDTs for conflict resolution, and IndexedDB for persistence.
 
-PR #{pr_number} by @{pr_author}
-Title: {pr_title}
-Description: {pr_body}
+          PR #{pr_number} by @{pr_author}
+          Title: {pr_title}
+          Description: {pr_body}
 
-Diff:
-```diff
-{diff}
-```
+          Diff:
+          ```diff
+          {diff}
+          ```
 
-Review this PR thoroughly. Focus on:
-- Correctness and logic errors
-- TypeScript type safety
-- Performance implications (especially in hot paths like find(), sync, CRDT merge)
-- Security concerns (especially in auth/ and network/ packages)
-- Test coverage adequacy
-- Code style and consistency with the codebase
+          Review this PR thoroughly. Focus on:
+          - Correctness and logic errors
+          - TypeScript type safety
+          - Performance implications (especially in hot paths like find(), sync, CRDT merge)
+          - Security concerns (especially in auth/ and network/ packages)
+          - Test coverage adequacy
+          - Code style and consistency with the codebase
 
-Also, analyze the PR and suggest appropriate GitHub labels. Common labels include:
-- Types: `bug`, `enhancement`, `type:docs`, `type:refactor`, `type:testing`, `type:chore`
-- Levels: `level:beginner`, `level:intermediate`, `level:advanced`, `level:critical`
-- Packages: `package:core`, `package:db`, `package:sync`, `package:network`, `package:auth`, `package:cli`, `package:web`
+          Also, analyze the PR and suggest appropriate GitHub labels. Common labels include:
+          - Types: `bug`, `enhancement`, `type:docs`, `type:refactor`, `type:testing`, `type:chore`
+          - Levels: `level:beginner`, `level:intermediate`, `level:advanced`, `level:critical`
+          - Packages: `package:core`, `package:db`, `package:sync`, `package:network`, `package:auth`, `package:cli`, `package:web`
 
-Respond ONLY with valid JSON — no markdown, no extra text:
-{{
-  "verdict": "APPROVE" | "REQUEST_CHANGES" | "COMMENT",
-  "summary": "2-3 sentence high-level assessment of the PR",
-  "issues": [
-    {{
-      "severity": "critical" | "major" | "minor" | "nitpick",
-      "file": "relative/path/to/file or empty string",
-      "description": "specific, actionable description of the issue"
-    }}
-  ],
-  "positives": ["specific things done well"],
-  "key_suggestion": "the single most important improvement to make, or empty string",
-  "safe_to_merge": true | false,
-  "suggested_labels": ["label1", "label2"]
-}}
+          Respond ONLY with valid JSON — no markdown, no extra text:
+          {{
+            "verdict": "APPROVE" | "REQUEST_CHANGES" | "COMMENT",
+            "summary": "2-3 sentence high-level assessment of the PR",
+            "issues": [
+              {{
+                "severity": "critical" | "major" | "minor" | "nitpick",
+                "file": "relative/path/to/file or empty string",
+                "description": "specific, actionable description of the issue"
+              }}
+            ],
+            "positives": ["specific things done well"],
+            "key_suggestion": "the single most important improvement to make, or empty string",
+            "safe_to_merge": true | false,
+            "suggested_labels": ["label1", "label2"]
+          }}
 
-Verdict rules:
-- APPROVE: no blockers, code is solid
-- REQUEST_CHANGES: has critical or major issues that must be fixed
-- COMMENT: only minor/nitpick issues or just observations
-PYEOF
+          Verdict rules:
+          - APPROVE: no blockers, code is solid
+          - REQUEST_CHANGES: has critical or major issues that must be fixed
+          - COMMENT: only minor/nitpick issues or just observations
+          """
 
           api_key = os.environ.get('GROQ_API_KEY', '')
           if not api_key:
